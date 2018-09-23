@@ -4,7 +4,7 @@ Hardware/Firmware/Sketch/kdevice.xml by E.Burkowski / e.burkowski@konnekting.de,
 Compatible with: KONNEKTING Device Library 1.0.0 beta 4b
 */
 
-/* this libraries are required (click on link and download with library manager:
+/* this libraries are required (click on link and download with library manager):
 FlashStorage:              http://librarymanager/All#FlashStorage
 DimmerControl:             http://librarymanager/All#DimmerControl
 Adafruit Neopixel:         http://librarymanager/All#Adafruit_Neopixel 
@@ -16,7 +16,7 @@ KONNEKTING Device Library: http://librarymanager/All#Konnekting
 
 //developer settings
 //#define FAKE_EEPROM  //don't use this ;) 
-#define KDEBUG // comment this line to disable DEBUG mode
+//#define KDEBUG // comment this line to disable DEBUG mode
 
 
 #include <DimmerControl.h>
