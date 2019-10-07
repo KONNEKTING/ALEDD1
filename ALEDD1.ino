@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------------------------
-ALEDD 0.1 beta (work in progress)
+ALEDD 0.2 beta (work in progress)
 Hardware/Firmware/Sketch/kdevice.xml by E.Burkowski / e.burkowski@konnekting.de, GPL Licensed
 Compatible with: KONNEKTING Device Library 1.0.0 beta 4b
 */
@@ -50,10 +50,17 @@ KONNEKTING Device Library: http://librarymanager/All#Konnekting
 //global variables
 
 #define USERCOLORS 5
+#define R 0
+#define G 1
+#define B 2
+#define W 3
+
 
 bool initialized = false;
 byte currentTask = 0xFE; //0xFE - idle
 byte lastTask = 0xFE;
+byte sendSceneNumber = 0xFF;
+byte lastDimmerValue = 0;
 
 byte curveR[256];
 byte curveG[256];
@@ -93,9 +100,16 @@ byte ucBlue[USERCOLORS];
 byte ucWhite[USERCOLORS];
 byte new3Byte[3] = {0,0,0};
 byte new6Byte[6] = {0,0,0,0,0,0};
-bool rgbwhsvChanged = false;
-bool acceptNewValues = false;
-unsigned long rgbwhsvChangedMillis = 0;
+byte newRGBW[4] = {0,0,0,0};
+byte valuesRGBW[4] = {0,0,0,0};
+byte newHSV[3] = {0,0,0};
+byte valuesHSV[3] = {0,0,0};
+bool rgbwChanged = false;
+bool hsvChanged = false;
+bool acceptNewRGBW = false;
+bool acceptNewHSV = false;
+unsigned long rgbwChangedMillis = 0;
+unsigned long hsvChangedMillis = 0;
 word rgbwhsvChangedDelay = 50;
 
 
@@ -118,65 +132,16 @@ NeoPixelPainterBrush *pixelbrush4on2; //brush 4 on cancas 2
 HSV brushcolor;
 DimmerControl dimmer;
 
+#include "hsvrgb.h"
 #include "animations.h"
 #include "led_functions.h"
 #include "scenes.h"
+#include "button.h"
 
-void progButtonPressed(){
-    bool btnState = !digitalRead(PROG_BUTTON_PIN);
-    //button pressed
-    if(btnState){
-        if(!buttonPressed){
-            clickMillis = millis();
-        }
-        buttonPressed = true;
-    }
-    //button released
-    if(!btnState){
-        unsigned long clickDuration = millis() - clickMillis;
-        buttonPressed = false;
-        if(clickDuration >= DEBOUNCE)
-            if(clickDuration > longClickDurationBtn){
-                    taskOnLongClick();
-            }else{
-                    taskOnShortClick();
-            }
-    }
-
-}
-void taskOnShortClick(){
-    //toggle ProgMode
-    Konnekting.setProgState(!Konnekting.isProgState());
-
-    //if already programmed, show LED settings
-    if(!Konnekting.isFactorySetting() && !ledTestMode){
-        if(Konnekting.isProgState())
-            showProgrammedLeds();
-        else
-            neopixels->clear();
-            neopixels->show();
-    }
-    Debug.println(F("free ram: %d bytes"), Debug.freeRam());
-}
-void taskOnLongClick(){
-    //ATTENTION: we creating a new neopixel object with 600(!) LED that consumes alot of RAM!
-    //MCU will be reseted after this test!
-    ledTestMode = !ledTestMode;
-    if(ledTestMode){
-        Debug.println(F("free ram before testStrip(): %d bytes"), Debug.freeRam());
-        testStrip();
-        Debug.println(F("free ram after testStrip(): %d bytes"), Debug.freeRam());
-    }else{
-        Debug.println(F("reboot!"));
-        NVIC_SystemReset() ;
-        while (true);
-    }
-
-}
 
 void setup() {
     pinMode(PROG_LED_PIN, OUTPUT);
-    pinMode(PROG_BUTTON_PIN, INPUT);
+    pinMode(PROG_BUTTON_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(PROG_BUTTON_PIN), progButtonPressed, CHANGE);
 #ifdef KDEBUG
     SerialUSB.begin(115200);
@@ -220,14 +185,7 @@ void setup() {
         valueMinDay = Konnekting.getUINT8Param(PARAM_day_min);
         valueMaxDay = Konnekting.getUINT8Param(PARAM_day_max);
         valueMinNight = Konnekting.getUINT8Param(PARAM_night_min);
-        valueMaxNight = Konnekting.getUINT8Param(PARAM_night_max);
-        //set day values until we know if it is day or night
-        setDayNightValues(false);
-      
-        //XML group: scenes
-        for (byte sc = 0; sc < 64; sc++) {
-            scene[sc] = Konnekting.getUINT8Param(PARAM_scene01 + sc);
-        }
+
         //XML group: User colors
         for (byte uc = 0; uc < USERCOLORS; uc++) {
             ucRed[uc]   = Konnekting.getUINT8Param(PARAM_uc1r + 4 * uc);
@@ -262,10 +220,27 @@ void loop() {
     if (Konnekting.isReadyForApplication()) {
         dimmer.task();
         taskFunction();
-        if(rgbwhsvChanged){
-            if(millis() - rgbwhsvChangedMillis > rgbwhsvChangedDelay && !acceptNewValues){
-                Debug.println(F("apply new rgb(w) / hsv values"));
-                acceptNewValues = true;
+        if(rgbwChanged){
+            if(millis() - rgbwChangedMillis > rgbwhsvChangedDelay && !acceptNewRGBW){
+                Debug.println(F("apply new rgb(w) values"));
+                Debug.println(F("newRGBW R: %d, G: %d, B: %d, W: %d"),newRGBW[R],newRGBW[G],newRGBW[B],newRGBW[W]);
+                Debug.println(F("valuesRGBW R: %d, G: %d, B: %d, W: %d \n"),valuesRGBW[R],valuesRGBW[G],valuesRGBW[B],valuesRGBW[W]);
+
+                valuesRGBW[R] = newRGBW[R];
+                valuesRGBW[G] = newRGBW[G];
+                valuesRGBW[B] = newRGBW[B];
+                valuesRGBW[W] = newRGBW[W];
+                acceptNewRGBW = true;
+            }
+        }
+        if(hsvChanged){
+            if(millis() - hsvChangedMillis > rgbwhsvChangedDelay && !acceptNewHSV){
+                Debug.println(F("apply new hsv values"));
+
+                valuesHSV[0] = newHSV[0];
+                valuesHSV[1] = newHSV[1];
+                valuesHSV[2] = newHSV[2];
+                acceptNewHSV = true;
             }
         }
         if (dimmer.updateAvailable()) {
@@ -279,11 +254,18 @@ void loop() {
                 Debug.println(F("Send to Obj: %d value: 0"), COMOBJ_dim_state);
                 //if one of channels is off... all can't be on
                 //                  allChannelsOn = false;
+				sendSceneNumber = 0; //all off
             }
             Knx.write(COMOBJ_dim_value, dimmer.getCurrentValue());
             Debug.println(F("Send to Obj: %d value: %d"), COMOBJ_dim_value, dimmer.getCurrentValue());
+			lastDimmerValue = dimmer.getCurrentValue();
             dimmer.resetUpdateFlag();
         }
+		if(sendSceneNumber < 64){
+      Debug.println(F("Send to Obj: %d value: %d"), COMOBJ_scene_state, sendSceneNumber);
+			Knx.write(COMOBJ_scene_state, sendSceneNumber);
+			sendSceneNumber = 0xFF;
+		}
     }
 }
 
@@ -318,103 +300,106 @@ void knxEvents(byte comObjIndex) {
             break;
       
         case COMOBJ_scene : // Scene
-            newTask = scene[Knx.read(comObjIndex)];
+            newTask = Knx.read(comObjIndex);
             Debug.println(F("newTask: 0x%02X"), newTask);
-            if (newTask != 0xFF) currentTask = newTask;
+			
+            if (newTask != 0xFF) {
+        				currentTask = newTask;
+        				acceptNewRGBW = true;
+        		}
 //            powerSupplyTask();
             break;
         case COMOBJ_RGB : // RGB 232.600
-            acceptNewValues = true;
+            acceptNewRGBW = true;
             newTask = TASK_RGB;
             Debug.println(F("newTask: 0x%02X"), newTask);
-            Knx.read(comObjIndex,new3Byte);
+            Knx.read(comObjIndex, new3Byte);
+            valuesRGBW[R] = new3Byte[R];
+            valuesRGBW[G] = new3Byte[G];
+            valuesRGBW[B] = new3Byte[B];
+            valuesRGBW[W] = 0;
             if (newTask != 0xFF) currentTask = newTask;
 //            powerSupplyTask();
             break;
         case COMOBJ_RGBW : // RGBW 251.600
-            acceptNewValues = true;
+            acceptNewRGBW = true;
             newTask = TASK_RGBW;
             Debug.println(F("newTask: 0x%02X"), newTask);
-            Knx.read(comObjIndex,new6Byte);
+            Knx.read(comObjIndex, new6Byte);
+            valuesRGBW[R] = new6Byte[2];
+            valuesRGBW[G] = new6Byte[3];
+            valuesRGBW[B] = new6Byte[4];
+            valuesRGBW[W] = new6Byte[5];
+            Debug.println(F("valuesRGBW R: %d, G: %d, B: %d, W: %d \n"),valuesRGBW[R],valuesRGBW[G],valuesRGBW[B],valuesRGBW[W]);
+
             if (newTask != 0xFF) currentTask = newTask;
 //            powerSupplyTask();
             break;
         case COMOBJ_HSV : // HSV 232.600
-            acceptNewValues = true;
+            acceptNewHSV = true;
             newTask = TASK_HSV;
             Debug.println(F("newTask: 0x%02X"), newTask);
-            Knx.read(comObjIndex,new3Byte);
+            Knx.read(comObjIndex, valuesHSV);
+            Debug.println(F("valuesHSV H: %d, S: %d, V: %d\n"),valuesHSV[0],valuesHSV[1],valuesHSV[2]);
+
             if (newTask != 0xFF) currentTask = newTask;
 //            powerSupplyTask();
             break;
       
         case COMOBJ_r :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new6Byte[2] = Knx.read(comObjIndex);
-            Debug.println(F("new R: %d"), new6Byte[2]);
+            rgbwChanged = true;
+            rgbwChangedMillis = millis();
+            newRGBW[R] = Knx.read(comObjIndex);
+            Debug.println(F("new R: %d / 0x%02x"), newRGBW[R], newRGBW[R]);
             newTask = TASK_RGBW;
             if (newTask != 0xFF) currentTask = newTask;
             break;
         case COMOBJ_g :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new6Byte[3] = Knx.read(comObjIndex);
-            Debug.println(F("new G: %d"), new6Byte[3]);
+            rgbwChanged = true;
+            rgbwChangedMillis = millis();
+            newRGBW[G] = Knx.read(comObjIndex);
+            Debug.println(F("new G: %d / 0x%02x"), newRGBW[G], newRGBW[G]);
             newTask = TASK_RGBW;
             if (newTask != 0xFF) currentTask = newTask;
             break;
         case COMOBJ_b :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new6Byte[4] = Knx.read(comObjIndex);
-            Debug.println(F("new B: %d"), new6Byte[4]);
+            rgbwChanged = true;
+            rgbwChangedMillis = millis();
+            newRGBW[B] = Knx.read(comObjIndex);
+            Debug.println(F("new B: %d / 0x%02x"), newRGBW[B], newRGBW[B]);
             newTask = TASK_RGBW;
             if (newTask != 0xFF) currentTask = newTask;
             break;
         case COMOBJ_w :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new6Byte[5] = Knx.read(comObjIndex);
-            Debug.println(F("new W: %d"), new6Byte[5]);
+            rgbwChanged = true;
+            rgbwChangedMillis = millis();
+            newRGBW[W] = Knx.read(comObjIndex);
+            Debug.println(F("new W: %d / 0x%02x"), newRGBW[W], newRGBW[W]);
             newTask = TASK_RGBW;
             if (newTask != 0xFF) currentTask = newTask;
             break;
+            
         case COMOBJ_h :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new3Byte[0] = Knx.read(comObjIndex);
-            Debug.println(F("new H"), new3Byte[0]);
+            hsvChanged = true;
+            hsvChangedMillis = millis();
+            newHSV[0] = Knx.read(comObjIndex);
+            Debug.println(F("new H"), newHSV[0]);
             newTask = TASK_HSV;
             if (newTask != 0xFF) currentTask = newTask;
             break;
         case COMOBJ_s :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new3Byte[1] = Knx.read(comObjIndex);
-            Debug.println(F("new S"), new3Byte[1]);
+            hsvChanged = true;
+            hsvChangedMillis = millis();
+            newHSV[1] = Knx.read(comObjIndex);
+            Debug.println(F("new S"), newHSV[1]);
             newTask = TASK_HSV;
             if (newTask != 0xFF) currentTask = newTask;
             break;
         case COMOBJ_v :
-//      if(!rgbwhsvChanged) {
-            rgbwhsvChanged = true;
-            rgbwhsvChangedMillis = millis();
-//      }
-            new3Byte[2] = Knx.read(comObjIndex);
-            Debug.println(F("new S"), new3Byte[2]);
+            hsvChanged = true;
+            hsvChangedMillis = millis();
+            newHSV[2] = Knx.read(comObjIndex);
+            Debug.println(F("new S"), newHSV[2]);
             newTask = TASK_HSV;
             if (newTask != 0xFF) currentTask = newTask;
             break;
@@ -422,6 +407,8 @@ void knxEvents(byte comObjIndex) {
         default:
             break;
     }
+	if(newTask != lastTask && newTask < 64){
+		//0 .. 63 are KNX scenes, 64 .. 255 for internal use only!
+		sendSceneNumber = newTask;
+	}
 }
-
-

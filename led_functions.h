@@ -63,9 +63,9 @@ void showProgrammedLeds(){
     //each tens LED is red (10,20,30,40,60,70...)
     for(int i = 4; i < numberLeds; i++){
         if((i % 10 == 0) && (i % 50 != 0)) neopixels->setPixelColor(i-1, 0,255,0,0); //each 10. is red
-        if(i % 50 == 0) neopixels->setPixelColor(i-1, 0,0,255,0); //each 50. is blue
+        if(i % 50 == 0) neopixels->setPixelColor(i - 1, 0, 0, 255, 0); //each 50. is blue
     }
-    neopixels->setPixelColor(numberLeds-1, 255,0,0,0); //last one is green
+    neopixels->setPixelColor(numberLeds - 1, 255, 0, 0, 0); //last one is green
     neopixels->show();
 }
     
@@ -80,7 +80,7 @@ void initStrip(word pixel, byte type){
     pixelbrush2 = new NeoPixelPainterBrush(pixelcanvas); 
     pixelbrush3 = new NeoPixelPainterBrush(pixelcanvas);
     pixelbrush4on2 = new NeoPixelPainterBrush(pixelcanvas2);
-    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX,   22,   23,  24, SPI_PAD_0_SCK_3, SERCOM_RX_PAD_2, PIO_SERCOM_ALT);
+    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX, 22, 23, 24, SPI_PAD_0_SCK_3, SERCOM_RX_PAD_2, PIO_SERCOM_ALT);
     neopixels->show();
     Debug.println(F("initPixel"));
 }
@@ -109,7 +109,7 @@ void taskDimUpDownStop(byte value){
     byte step = value & DPT3_007_MASK_STEP;
     //true = increase, false = decrease
     bool direction = value & DPT3_007_MASK_DIRECTION;
-    Debug.println(F("value: %d, step: %d, direction: %d"),value,step,direction);
+    Debug.println(F("value: %d, step: %d, direction: %d"), value, step, direction);
     //if step == B?????000 then stop
     if(step == DPT3_007_STOP)
         dimmer.taskStop();
@@ -126,7 +126,7 @@ void taskNewValue(byte value){
 
 void setAll(byte r, byte g, byte b, byte w){
     currentTask = 0xFE; //TASK_IDLE
-    //if we only have RGB, try to display mixed white
+    //if we have RGB only, try to display mixed white
     if(!rgbw && w != 0 && r == 0 && g == 0 && b == 0){
         r = getLogValue(w, gammaCorrection, 1, mixedWhite[0], 256);
         g = getLogValue(w, gammaCorrection, 1, mixedWhite[1], 256);
@@ -140,29 +140,28 @@ void setAll(byte r, byte g, byte b, byte w){
         w = curveW[w];
     }
 #ifdef KDEBUG
-    Debug.println(F("setAll R: %d, G: %d, B: %d, W: %d"),r,g,b,w);
+    Debug.println(F("setAll log: R: %d, G: %d, B: %d, W: %d, HEX: 0x%02x 0x%02x 0x%02x 0x%02x"),r,g,b,w,r,g,b,w);
 #endif
     for(int i = 0; i < numberLeds; i++){
         neopixels->setPixelColor(i, r,g,b,w);
-        
     }
     neopixels->show();
 }
 
 void setAllHsv(byte h, byte s, byte v){
-    Debug.println(F("setAllHsv H: %d, S: %d, V: %d"),h,s,v);
+    Debug.println(F("setAllHsv H: %d, S: %d, V: %d"), h, s, v);
     currentTask = 0xFE; //TASK_IDLE
-    RGB newColor;
-//    pixelcanvas->HSVtoRGB(h,s,v);
-    
+    byte newRGB[3];
+    hsvToRgb(h, s, v, newRGB);
+ 
     for(int i = 0; i < numberLeds; i++){
-        neopixels->setPixelColor(i, newColor.r,newColor.g,newColor.b,0);
+        neopixels->setPixelColor(i, newRGB[R], newRGB[G], newRGB[B]);
         neopixels->show();
     }
 }
 
 //function to set LED-Values
 void setLeds(byte index){
-    setAll(0,0,0,index);
+    setAll(0, 0, 0, index);
 //    Debug.println(F("setLeds %d"),index);
 }

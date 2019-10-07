@@ -3,7 +3,7 @@ Uart SerialKNX (&sercom2, 3, 1, SERCOM_RX_PAD_1, UART_TX_PAD_2); //+pinPeriphera
 //Interrupt handler for SerialKNX
 void SERCOM2_Handler()
 {
-  SerialKNX.IrqHandler();
+    SerialKNX.IrqHandler();
 }
 
 //Hardware settings 

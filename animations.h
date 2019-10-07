@@ -28,6 +28,12 @@ void rainbow() {
 
 }
 
+void singlergb(){
+	//let set single RGB color to whole strip and go though hue disk
+	//ToDo
+}
+
+
 void sparkler() {
   //    HSV brushcolor;
 
