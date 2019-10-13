@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------------------------
-ALEDD 0.2 beta (work in progress)
+ALEDD 0.2.0 beta (work in progress)
 Hardware/Firmware/Sketch/kdevice.xml by E.Burkowski / e.burkowski@konnekting.de, GPL Licensed
 Compatible with: KONNEKTING Device Library 1.0.0 beta 4b
 */
