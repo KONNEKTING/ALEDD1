@@ -1,55 +1,15 @@
-//Scene 1 .. 9
-#define ALL_OFF 0x00
-#define WHITE 0x01
-#define RED 0x02
-#define YELLOW 0x03
-#define GREEN 0x04
-#define CYAN 0x05
-#define BLUE 0x06
-#define PURPLE 0x07
-#define ORANGE 0x08
-
-//Scenes 21 .. 25
-#define USER_COLOR_1 0x14 
-#define USER_COLOR_2 0x15
-#define USER_COLOR_3 0x16
-#define USER_COLOR_4 0x17
-#define USER_COLOR_5 0x18
-
-//Scenes 41 .. 52
-#define RAINBOW 0x28  //41
-#define SINGLERGB 0x29 //42
-#define SPARKLER 0x2A  //43
-#define TWINKYSTARS 0x2B  //44
-#define CHASER 0x2C  //45
-#define HUEFADER 0x2D  //46
-#define SPEEDTRAILS 0x2E  //47
-#define BOUNCYBALLS 0x2F  //48
-#define TWOBRUSHCOLORMIXING 0x30 //49
-
-
-#define WHIREMIDDLEON 0x32
-#define WHIREMIDDLEOFF 0x33
-
-
-
-//Scene 61 .. 64
-#define TASK_RGB 0x3C
-#define TASK_RGBW 0x3D
-#define TASK_HSV 0x3E
-#define DIMMER 0x3F
-
-
-
-
-
-
-#define TASK_IDLE 0xFE
-
-
-
 void taskFunction(){
 //    Debug.println(F("currentTask: 0x%02X"), currentTask);
+    if(currentTask != TASK_IDLE) {
+        lastTaskBeforeMessage = currentTask;
+        //exit WAIT state
+        if(!statusM1) statusM1 = true;
+        if(!statusM2) statusM2 = true;
+        if(!statusM3) statusM3 = true;
+        if(!statusM4) statusM4 = true;
+    }
+    
+
     switch(currentTask){
         case ALL_OFF:
             setAll(0,0,0,0);
@@ -135,7 +95,6 @@ void taskFunction(){
             if(acceptNewRGBW){
 //                Debug.println(F("valuesRGBW R: %d, G: %d, B: %d, W: %d"),valuesRGBW[R],valuesRGBW[G],valuesRGBW[B],valuesRGBW[W]);
                 setAll(valuesRGBW[R], valuesRGBW[G], valuesRGBW[B], valuesRGBW[W]);
-
                 acceptNewRGBW = false;
                 rgbwChanged = false;
                 //reset color because of time out (acceptNewRGBW)
@@ -147,16 +106,11 @@ void taskFunction(){
             break;
         case TASK_RGBW:
             if(acceptNewRGBW){
-                //first 12 bits not defined, 4 bits ignored
-//                Debug.println(F("valuesRGBW R: %d, G: %d, B: %d, W: %d"), valuesRGBW[R], valuesRGBW[G], valuesRGBW[B], valuesRGBW[W]);
+                //first 12 bits are not defined, 4 bits ignored
+                Debug.println(F("valuesRGBW R: %d, G: %d, B: %d, W: %d"), valuesRGBW[R], valuesRGBW[G], valuesRGBW[B], valuesRGBW[W]);
                 setAll(valuesRGBW[R], valuesRGBW[G], valuesRGBW[B], valuesRGBW[W]);
                 acceptNewRGBW = false;
                 rgbwChanged = false;
-                //reset color because of time out (acceptNewRGBW)
-//                new6Byte[2] = 0;
-//                new6Byte[3] = 0;
-//                new6Byte[4] = 0;
-//                new6Byte[5] = 0;
                 Debug.println(F("TASK_RGBW done"));
             }
             break;
@@ -164,22 +118,19 @@ void taskFunction(){
             if(acceptNewHSV){
                 setAllHsv(valuesHSV[0], valuesHSV[1], valuesHSV[2]);
                 acceptNewHSV = false;
-                hsvChanged = false;
-                //reset color because of time out (acceptNewRGBW)
-//                new3Byte[0] = 0;
-//                new3Byte[1] = 0;
-//                new3Byte[2] = 0;
                 Debug.println(F("TASK_HSV done"));
             }
             break;
-        case DIMMER:
+        case TASK_DIMMER:
             setAll(0, 0, 0, lastDimmerValue);
-//			      taskNewValue(lastDimmerValue);
             break;
-
-            
+           
         case TASK_IDLE:
         default:
             break;
+    }
+    showMessage();
+    if(pixelsShow){
+        showPixels();
     }
 }
