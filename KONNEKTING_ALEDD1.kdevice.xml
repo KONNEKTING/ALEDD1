@@ -486,6 +486,12 @@
                 <DataPointType>1.001</DataPointType>
                 <Flags>52</Flags>
             </CommObject>
+            <CommObject Id="34" IdName="nightMode">
+                <Name>Night mode</Name>
+                <Function>State</Function>
+                <DataPointType>1.001</DataPointType>
+                <Flags>43</Flags>
+            </CommObject>
         </CommObjects>
         <Dependencies>
 <!--rgb only-->

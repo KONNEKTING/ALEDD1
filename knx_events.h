@@ -224,12 +224,12 @@ void knxEvents(byte comObjIndex) {
             ledColorM3[G] = new3Byte[G];
             ledColorM3[B] = new3Byte[B];
             ledColorM3[W] = 0;
-            if(!ledColorM1[R] && !ledColorM1[G] && !ledColorM1[B]){ //RGBW = off
-                newValueM1 = 0;
+            if(!ledColorM3[R] && !ledColorM3[G] && !ledColorM3[B]){ //RGBW = off
+                newValueM3 = 0;
             }else{
-                newValueM1 = 255;
+                newValueM3 = 255;
             }
-            statusM1 = true;
+            statusM3 = true;
             break;
         case COMOBJ_m3rgbw: //Message 3 RGBW
             Knx.read(comObjIndex, new6Byte);
@@ -268,7 +268,7 @@ void knxEvents(byte comObjIndex) {
             }else{
                 newValueM4 = 255;
             }
-            statusM1 = true;
+            statusM4 = true;
             break;
         case COMOBJ_m4rgbw: //Message 1 RGBW
             Knx.read(comObjIndex, new6Byte);
@@ -282,6 +282,9 @@ void knxEvents(byte comObjIndex) {
                 newValueM4 = 255;
             }
             statusM4 = true;
+            break;
+        case COMOBJ_nightMode:
+            nightMode = Knx.read(COMOBJ_nightMode);
             break;
         default:
             break;

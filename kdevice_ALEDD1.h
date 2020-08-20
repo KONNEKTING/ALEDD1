@@ -36,6 +36,7 @@
 #define COMOBJ_m4rgb 31
 #define COMOBJ_m4rgbw 32
 #define COMOBJ_power_supply 33
+#define COMOBJ_nightMode 34
 #define PARAM_led_type 0
 #define PARAM_number_leds_strip 1
 #define PARAM_first_on_value 2
@@ -134,7 +135,8 @@ KnxComObject KnxDevice::_comObjectsList[] = {
     /* Index 30 - m4perc */ KnxComObject(KNX_DPT_5_001, 0x2a),
     /* Index 31 - m4rgb */ KnxComObject(KNX_DPT_232_600, 0x2a),
     /* Index 32 - m4rgbw */ KnxComObject(KNX_DPT_251_600, 0x2a),
-    /* Index 33 - power_supply */ KnxComObject(KNX_DPT_1_001, 0x34)
+    /* Index 33 - power_supply */ KnxComObject(KNX_DPT_1_001, 0x34),
+    /* Index 34 - nightMode */ KnxComObject(KNX_DPT_1_001, 0x2b)
 };
 const byte KnxDevice::_numberOfComObjects = sizeof (_comObjectsList) / sizeof (KnxComObject); // do not change this code
        

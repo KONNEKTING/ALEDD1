@@ -207,7 +207,7 @@ attention: if message color matches current stripe color, it's not possible to i
 
 void setMessageLeds(word firstLed, word lastLed, byte newValue, byte newColor[4]){
 /*
-  we can display up to 2 messages on a single strip
+  we can display up to 4 messages on a single strip
   each message has it own stripe range
   the range is defined in KONNEKTING Suite "from LED number x up to LED number y"
   message 2 will override (or part of) message 1 if message 2 range overlaps message 1 range
@@ -229,7 +229,7 @@ Message 2 range: 14 - 0 => 7 LEDs, not possible in direct way. Please set LED 0 
                  if LED 0 will be set as 0, than the range will be 15 LEDs: 14,13,12...2,1,0
 
 */
-    if(newValue){ //if 0, do nothing, we've allready wiped with animation or static color
+    if(newValue){ //if 0, do nothing, we have already wiped with animation or static color
         if(lastLed >= firstLed){
             word amount = (lastLed - firstLed + 1) * newValue / 255; //round up //floor()
             for(word led = firstLed; led < firstLed + amount; led++){
@@ -261,6 +261,10 @@ void showMessage(){
             lastValueM1 = newValueM1;
             setMessageLeds(ledFirstM2, ledLastM2, newValueM2, ledColorM2);
             lastValueM2 = newValueM2;
+            setMessageLeds(ledFirstM3, ledLastM3, newValueM3, ledColorM3);
+            lastValueM3 = newValueM3;
+            setMessageLeds(ledFirstM4, ledLastM4, newValueM4, ledColorM4);
+            lastValueM4 = newValueM4;
             pixelsShow = true; //show result 
         }
         //turn Message LEDs on/off if it's not an animation (static color)

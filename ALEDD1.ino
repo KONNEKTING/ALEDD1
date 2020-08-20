@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------------------------
-ALEDD 0.3.0 beta (work in progress)
+ALEDD 0.4.0 beta (work in progress)
 Hardware/Firmware/Sketch/kdevice.xml by E.Burkowski / e.burkowski@konnekting.de, GPL Licensed
 Compatible with: KONNEKTING Device Library 1.0.0 beta 4b
 */
@@ -49,6 +49,7 @@ bool staticColorReady = false;
 byte sendSceneNumber = 0xFF;
 byte lastDimmerValue = 0;
 unsigned long lastAnimMillis = 0;
+bool nightMode = false;
 
 byte curveR[256];
 byte curveG[256];
