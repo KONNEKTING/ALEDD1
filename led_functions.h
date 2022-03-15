@@ -45,9 +45,9 @@ void testStrip(){
     if(neopixels) delete neopixels;
     neopixels = new Adafruit_NeoPixel_ZeroDMA(600, LED_STRIP_PIN, NEO_RGBW);
 #ifdef DEVELPMENT    
-    neopixels->begin(&sercom5, SERCOM5, SERCOM5_DMAC_ID_TX,  6,  7, A5, SPI_PAD_2_SCK_3, SERCOM_RX_PAD_0, PIO_SERCOM);
+    neopixels->begin(&sercom5, SERCOM5, SERCOM5_DMAC_ID_TX,  6, SPI_PAD_2_SCK_3, PIO_SERCOM);
 #else
-    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX, 22, 23, 24, SPI_PAD_0_SCK_3, SERCOM_RX_PAD_2, PIO_SERCOM_ALT);
+    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX, 22, SPI_PAD_0_SCK_3, PIO_SERCOM_ALT);
 #endif
     neopixels->setPixelColor(0, 255 , 0, 0, 0);
     neopixels->setPixelColor(1, 0, 255, 0, 0);
@@ -87,9 +87,9 @@ void initStrip(word pixel, byte type){
     pixelbrush3 = new NeoPixelPainterBrush(pixelcanvas);
     pixelbrush4on2 = new NeoPixelPainterBrush(pixelcanvas2);
 #ifdef DEVELPMENT    
-    neopixels->begin(&sercom5, SERCOM5, SERCOM5_DMAC_ID_TX,  6,  7, A5, SPI_PAD_2_SCK_3, SERCOM_RX_PAD_0, PIO_SERCOM);
+    neopixels->begin(&sercom5, SERCOM5, SERCOM5_DMAC_ID_TX,  6, SPI_PAD_2_SCK_3, PIO_SERCOM);
 #else
-    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX, 22, 23, 24, SPI_PAD_0_SCK_3, SERCOM_RX_PAD_2, PIO_SERCOM_ALT);
+    neopixels->begin(&sercom4, SERCOM4, SERCOM4_DMAC_ID_TX, 22, SPI_PAD_0_SCK_3, PIO_SERCOM_ALT);
 #endif
     neopixels->show();
     Debug.println(F("initPixel"));

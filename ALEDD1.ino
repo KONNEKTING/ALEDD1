@@ -1,42 +1,48 @@
 /* ---------------------------------------------------------------------------------------------
 ALEDD 0.4.0 beta (work in progress)
 Hardware/Firmware/Sketch/kdevice.xml by E.Burkowski / e.burkowski@konnekting.de, GPL Licensed
-Compatible with: KONNEKTING Device Library 1.0.0 beta 4b
+Compatible with: KONNEKTING Device Library 1.0.0 RC1
 */
 
+//Board: Arduino Zero (Native USB Port) (Core Version 1.8.11)
+
 /* this libraries are required (click on link and download with library manager):
-FlashStorage:                     http://librarymanager/All#FlashStorage
-DimmerControl:                    http://librarymanager/All#DimmerControl
-Adafruit Neopixel:                http://librarymanager/All#Adafruit_Neopixel 
-Adafruit_ZeroDMA:                 http://librarymanager/All#Zero_DMA
-Adafruit Neopixel ZeroDMA 1.0.8:  http://librarymanager/All#Adafruit_DMA_neopixel_library 
-NeoPixel Painter:                 http://librarymanager/All#NeoPixel_Painter
-KONNEKTING Device Library:        http://librarymanager/All#Konnekting
+KonnektingFlashStorage 1.0.1:           http://librarymanager/All#KonnektingFlashStorage //do not install other FlashStorage library!
+DimmerControl 1.2.0:                    http://librarymanager/All#DimmerControl
+Adafruit Neopixel 1.10.0:               http://librarymanager/All#Adafruit_Neopixel 
+Adafruit Zero DMA Library 1.1.0:        http://librarymanager/All#Zero_DMA
+Adafruit DMA neopixel library 1.2.3:    http://librarymanager/All#Adafruit_DMA_neopixel_library 
+NeoPixel Painter 1.0.0:                 http://librarymanager/All#NeoPixel_Painter
+KONNEKTING Device Library 1.0.0-RC1:    http://librarymanager/All#Konnekting_device
 */
 
 //developer settings
 //#define DEVELOPMENT
-//#define FAKE_EEPROM  //don't use this ;) 
-//#define KDEBUG // comment this line to disable DEBUG mode
+
+
+
+//#define VIRTUAL_EEPROM  //don't use this ;) 
+#define KDEBUG // comment this line to disable DEBUG mode
 
 
 #include <DimmerControl.h>
 #include <FlashAsEEPROM.h>
 #include <Adafruit_NeoPixel_ZeroDMA.h>
 #include <NeoPixelPainter.h>
-
-#include "src/KonnektingDeviceLibrary/KonnektingDevice.h"
+#include <KonnektingDevice.h>
 
 #include "aledd1.h"
 #include "kdevice_ALEDD1.h"
 #include "defines.h"
 
 #ifdef KDEBUG
-#include "src/KonnektingDeviceLibrary/DebugUtil.h"
+#include <DebugUtil.h>
 #endif
 
-#ifdef FAKE_EEPROM
-#include "fakeEEPROM.h"
+#ifdef VIRTUAL_EEPROM
+#include "virtualEEPROM.h"
+#else
+Flash(my_eeprom_storage, 2048);
 #endif
 
 //global variables
@@ -156,7 +162,7 @@ HSV brushcolor;
 DimmerControl dimmer;
 
 //make functions known
-void showPixels ();
+void showPixels();
 
 #include "hsvrgb.h"
 #include "animations.h"
@@ -166,6 +172,7 @@ void showPixels ();
 #include "button.h"
 #include "knx_events.h"
 
+
 void setup() {
     pinMode(PROG_LED_PIN, OUTPUT);
     pinMode(PROG_BUTTON_PIN, INPUT_PULLUP);
@@ -174,21 +181,26 @@ void setup() {
 
 #ifdef KDEBUG
     SerialUSB.begin(115200);
-    while (!SerialUSB);
+   while (!SerialUSB);
     Debug.setPrintStream(&SerialUSB);
 #endif
-#ifdef FAKE_EEPROM
-    initFakeEeprom();
+#ifdef VIRTUAL_EEPROM
+    initVirtualEeprom();
+#else
+    EEPROM.setStorage(&my_eeprom_storage);
 #endif
 
     Konnekting.setMemoryReadFunc(&readMemory);
     Konnekting.setMemoryWriteFunc(&writeMemory);
     Konnekting.setMemoryUpdateFunc(&updateMemory);
     Konnekting.setMemoryCommitFunc(&commitMemory);
+#ifndef DEVELOPMENT
+    Konnekting.setPrepareSerialFunc(&prepareSerial);
+#endif
     Konnekting.init(SerialKNX, &progLed, MANUFACTURER_ID, DEVICE_ID, REVISION);
  
-#ifndef FAKE_EEPROM
-    for (int i = 0; i < Konnekting.getFreeEepromOffset(); i++) {
+#ifndef VIRTUAL_EEPROM
+    for (int i = 0; i < Konnekting.getMemoryUserSpaceStart(); i++) {
         Debug.println(F("\t\twriteMemory(%d,0x%02X);"), i, EEPROM.read(i));
     }
 #endif

@@ -1,3 +1,6 @@
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+
 void hsvToRgb(byte h, byte s, byte v, byte rgbColor[]){
     if(s){
         byte i = h / 43;

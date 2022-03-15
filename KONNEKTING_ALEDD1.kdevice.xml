@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <KonnektingDevice xmlns="http://konnekting.de/xml/KonnektingDevice/v0">
-    <Device ManufacturerId="7070" DeviceId="50" Revision="1">
+    <Device ManufacturerId="7070" DeviceId="50" Revision="1" SystemType="1">
         <ManufacturerName>KONNEKTING</ManufacturerName>
         <DeviceName>ALEDD1</DeviceName>
         <Parameters>
@@ -493,12 +493,12 @@
                 <Flags>43</Flags>
             </CommObject>
         </CommObjects>
-        <Dependencies>
-<!--rgb only-->
+<!--        <Dependencies>
+<!- -rgb only- ->
             <ParameterDependency ParamId="8" TestParamId="0" Test="le" TestValue="52"/>
             <ParameterDependency ParamId="9" TestParamId="0" Test="le" TestValue="52"/>
             <ParameterDependency ParamId="10" TestParamId="0" Test="le" TestValue="52"/>
-<!--rgbw only-->
+<!- -rgbw only- ->
             <ParameterDependency ParamId="6" TestParamId="0" Test="ge" TestValue="53"/>
             <ParameterDependency ParamId="20" TestParamId="0" Test="ge" TestValue="53"/>
             <ParameterDependency ParamId="24" TestParamId="0" Test="ge" TestValue="53"/>
@@ -509,17 +509,17 @@
             <ParameterDependency ParamId="48" TestParamId="0" Test="ge" TestValue="53"/>
             <ParameterDependency ParamId="54" TestParamId="0" Test="ge" TestValue="53"/>
             <ParameterDependency ParamId="60" TestParamId="0" Test="ge" TestValue="53"/>
-<!--power supply-->
+<!- -power supply- ->
             <ParameterDependency ParamId="62" TestParamId="61" Test="eq" TestValue="01"/>
-<!--rgbw only-->
+<!- -rgbw only- ->
             <CommObjectDependency CommObjId="9" TestParamId="0" Test="ge" TestValue="53"/>
             <CommObjectDependency CommObjId="11" TestParamId="0" Test="ge" TestValue="53"/>
             <CommObjectDependency CommObjId="20" TestParamId="0" Test="ge" TestValue="53"/>
             <CommObjectDependency CommObjId="24" TestParamId="0" Test="ge" TestValue="53"/>
             <CommObjectDependency CommObjId="28" TestParamId="0" Test="ge" TestValue="53"/>
             <CommObjectDependency CommObjId="32" TestParamId="0" Test="ge" TestValue="53"/>
-<!--power supply-->
+<!- -power supply- ->
             <CommObjectDependency CommObjId="33" TestParamId="61" Test="eq" TestValue="01"/>
-        </Dependencies>
+        </Dependencies>-->
     </Device>
 </KonnektingDevice>

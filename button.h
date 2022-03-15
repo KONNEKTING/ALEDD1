@@ -4,11 +4,10 @@ void taskOnShortClick(){
 
     //if already programmed, show LED settings
     if(!Konnekting.isFactorySetting() && !ledTestMode){
-        if(Konnekting.isProgState())
-            showProgrammedLeds();
-        else
-            neopixels->clear();
-            neopixels->show();
+        neopixels->clear();
+        neopixels->show();
+        if(Konnekting.isProgState()) showProgrammedLeds();
+        
     }
     Debug.println(F("free ram: %d bytes"), Debug.freeRam());
 }

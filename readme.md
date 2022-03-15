@@ -5,8 +5,6 @@ Use releases only: [https://github.com/KONNEKTING/ALEDD1/releases](https://githu
 
 This firmware requires external libraries, all of them can be installed via Arduino IDE library manager. Please check comment in [ALEDD1.ino](https://github.com/KONNEKTING/ALEDD1/blob/master/ALEDD1.ino#L7-L15)
 
-at the moment a special version of KONNEKTING Device Library is required (but it is included).
-
 not all features are implemented. 
 
 Pull-requests are welcome :)
